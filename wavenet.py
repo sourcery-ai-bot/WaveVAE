@@ -27,7 +27,7 @@ class Wavenet(nn.Module):
         )
 
         self.res_blocks = nn.ModuleList()
-        for b in range(self.num_blocks):
+        for _ in range(self.num_blocks):
             for n in range(self.num_layers):
                 self.res_blocks.append(ResBlock(self.residual_channels, self.gate_channels, self.skip_channels,
                                                 self.kernel_size, dilation=self.kernel_size**n,
@@ -51,8 +51,7 @@ class Wavenet(nn.Module):
 
     def forward(self, x, c):
         c = self.upsample(c)
-        out = self.wavenet(x, c)
-        return out
+        return self.wavenet(x, c)
 
     def upsample(self, c):
         if self.upsample_conv is not None:
@@ -70,8 +69,7 @@ class Wavenet(nn.Module):
         for i, f in enumerate(self.res_blocks):
             h, s = f(h, c)
             skip += s
-        out = self.final_conv(skip)
-        return out
+        return self.final_conv(skip)
 
     def receptive_field_size(self):
         num_dir = 1 if self.causal else 2

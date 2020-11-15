@@ -53,7 +53,6 @@ class WaveVAE(nn.Module):
 
     def generate(self, z, c):
         c_up = self.encoder.upsample(c)
-        x_sample = self.decoder.generate(z, c_up)
-        return x_sample
+        return self.decoder.generate(z, c_up)
 
 

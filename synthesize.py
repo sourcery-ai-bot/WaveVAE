@@ -43,8 +43,7 @@ test_loader = DataLoader(test_dataset, batch_size=1, collate_fn=collate_fn_synth
 
 
 def build_model():
-    model = WaveVAE()
-    return model
+    return WaveVAE()
 
 
 def load_checkpoint(path, model):

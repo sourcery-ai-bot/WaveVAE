@@ -31,16 +31,13 @@ class Wavenet_Student(nn.Module):
             mu = mu_logs[:, 0:1, :-1]
             logs = mu_logs[:, 1:, :-1]
             mu_tot = mu_tot * torch.exp(logs) + mu
-            logs_tot = logs_tot + logs
+            logs_tot += logs
             z = z[:, :, 1:] * torch.exp(logs) + mu
             z = F.pad(z, pad=(1, 0), mode='constant', value=0)
         return z, mu_tot, logs_tot
 
     def receptive_field(self):
-        receptive_field = 1
-        for iaf in self.iafs:
-            receptive_field += iaf.receptive_field_size() - 1
-        return receptive_field
+        return 1 + sum(iaf.receptive_field_size() - 1 for iaf in self.iafs)
 
     def generate(self, z, c_up):
         x, _, _ = self.iaf(z, c_up)
@@ -74,7 +71,7 @@ class Wavenet_Flow(nn.Module):
         )
         self.res_blocks = nn.ModuleList()
         self.res_blocks_fast = nn.ModuleList()
-        for b in range(self.num_blocks):
+        for _ in range(self.num_blocks):
             for n in range(self.num_layers):
                 self.res_blocks.append(ResBlock(self.residual_channels, self.gate_channels, self.skip_channels,
                                                 self.kernel_size, dilation=2**n,
@@ -96,8 +93,7 @@ class Wavenet_Flow(nn.Module):
         for i, f in enumerate(self.res_blocks):
             h, s = f(h, c)
             skip += s
-        out = self.final_conv(skip)
-        return out
+        return self.final_conv(skip)
 
     def receptive_field_size(self):
         num_dir = 1 if self.causal else 2

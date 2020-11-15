@@ -30,8 +30,11 @@ class LJspeechDataset(Dataset):
 
     def interest_indices(self, paths):
         test_num_samples = int(self.test_size * len(paths))
-        train_indices, test_indices = range(0, len(paths) - test_num_samples), \
-                                      range(len(paths) - test_num_samples, len(paths))
+        train_indices, test_indices = (
+            range(len(paths) - test_num_samples),
+            range(len(paths) - test_num_samples, len(paths)),
+        )
+
         return train_indices if self.train else test_indices
 
     def collect_files(self, col):
@@ -60,9 +63,8 @@ def _pad(seq, max_len, constant_values=0):
 
 
 def _pad_2d(x, max_len, b_pad=0):
-    x = np.pad(x, [(b_pad, max_len - len(x) - b_pad), (0, 0)],
+    return np.pad(x, [(b_pad, max_len - len(x) - b_pad), (0, 0)],
                mode="constant", constant_values=0)
-    return x
 
 
 def collate_fn(batch):
@@ -92,13 +94,8 @@ def collate_fn(batch):
                     x = x[ts:ts + hop_length * max_time_frames]
                     c = c[s:s + max_time_frames]
                     assert len(x) % len(c) == 0 and len(x) // len(c) == hop_length
-            else:
-                pass
             new_batch.append((x, c))
         batch = new_batch
-    else:
-        pass
-
     input_lengths = [len(x[0]) for x in batch]
     max_input_len = max(input_lengths)
 
@@ -110,7 +107,7 @@ def collate_fn(batch):
     assert len(y_batch.shape) == 2
 
     if local_conditioning:
-        max_len = max([len(x[1]) for x in batch])
+        max_len = max(len(x[1]) for x in batch)
         c_batch = np.array([_pad_2d(x[1], max_len) for x in batch], dtype=np.float32)
         assert len(c_batch.shape) == 3
         # (B x C x T')
@@ -148,9 +145,6 @@ def collate_fn_synthesize(batch):
                 assert len(x) % len(c) == 0 and len(x) // len(c) == hop_length
             new_batch.append((x, c))
         batch = new_batch
-    else:
-        pass
-
     input_lengths = [len(x[0]) for x in batch]
     max_input_len = max(input_lengths)
 
@@ -162,7 +156,7 @@ def collate_fn_synthesize(batch):
     assert len(y_batch.shape) == 2
 
     if local_conditioning:
-        max_len = max([len(x[1]) for x in batch])
+        max_len = max(len(x[1]) for x in batch)
         c_batch = np.array([_pad_2d(x[1], max_len) for x in batch], dtype=np.float32)
         assert len(c_batch.shape) == 3
         # (B x C x T')
